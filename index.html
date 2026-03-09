@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MyTradeStock V1</title>
+<title>MyTradeStock</title>
 
 <style>
+
 body{
 background:#111;
 color:white;
@@ -18,7 +19,7 @@ text-align:center;
 }
 
 .stock{
-margin:10px 0;
+margin:12px 0;
 font-size:18px;
 }
 
@@ -29,41 +30,56 @@ color:#2ea3ff;
 .down{
 color:#ff3b3b;
 }
+
 </style>
 
 </head>
 
 <body>
 
-<h1>📈 MyTradeStock V1</h1>
+<h1>📈 MyTradeStock</h1>
 
-<h2>주식 정보</h2>
-
-<div id="stocks">데이터 불러오는 중...</div>
+<div id="stocks">주식 불러오는 중...</div>
 
 <script>
 
+const API_KEY = "DSY41UQE7EYGC23C";
+
 const stocks = [
-{name:"삼성전자", price:72000, change:1200},
-{name:"SK하이닉스", price:145000, change:-800},
-{name:"NAVER", price:210000, change:500}
+{symbol:"AAPL", name:"Apple"},
+{symbol:"TSLA", name:"Tesla"},
+{symbol:"NVDA", name:"NVIDIA"}
 ];
 
-let html = "";
+async function loadStocks(){
+
+let html="";
 
 for(let stock of stocks){
 
-let className = stock.change >= 0 ? "up" : "down";
+let url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${stock.symbol}&apikey=${API_KEY}`;
 
-html += `
+let res = await fetch(url);
+let data = await res.json();
+
+let price = data["Global Quote"]["05. price"];
+let change = data["Global Quote"]["09. change"];
+
+let className = change >= 0 ? "up" : "down";
+
+html+=`
 <div class="stock ${className}">
-${stock.name} : ${stock.price.toLocaleString()} (${stock.change})
+${stock.name} : ${price} (${change})
 </div>
 `;
 
 }
 
-document.getElementById("stocks").innerHTML = html;
+document.getElementById("stocks").innerHTML=html;
+
+}
+
+loadStocks();
 
 </script>
 
