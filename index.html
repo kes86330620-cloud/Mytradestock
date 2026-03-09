@@ -6,6 +6,7 @@
 <title>MyTradeStock V1</title>
 
 <style>
+
 body{
 background:#111;
 color:white;
@@ -17,13 +18,19 @@ h1{
 text-align:center;
 }
 
-.positive{
+.stock{
+margin:10px 0;
+font-size:18px;
+}
+
+.up{
 color:#2ea3ff;
 }
 
-.negative{
+.down{
 color:#ff3b3b;
 }
+
 </style>
 
 </head>
@@ -32,16 +39,50 @@ color:#ff3b3b;
 
 <h1>📈 MyTradeStock V1</h1>
 
-<h2>뉴스</h2>
+<h2>실시간 주식</h2>
 
-<p class="positive">삼성전자 : AI 반도체 투자 확대</p>
-<p class="negative">카카오 : 실적 감소 우려</p>
+<div id="stocks"></div>
 
-<h2>주식</h2>
+<script>
 
-<p>삼성전자 72,000원</p>
-<p>SK하이닉스 145,000원</p>
-<p>NAVER 210,000원</p>
+const stocks = [
+{symbol:"005930.KS", name:"삼성전자"},
+{symbol:"000660.KS", name:"SK하이닉스"},
+{symbol:"035420.KS", name:"NAVER"}
+];
+
+async function loadStocks(){
+
+let container = document.getElementById("stocks");
+container.innerHTML = "불러오는 중...";
+
+let html = "";
+
+for(let stock of stocks){
+
+let url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${stock.symbol}`;
+
+let res = await fetch(url);
+let data = await res.json();
+
+let price = data.quoteResponse.result[0].regularMarketPrice;
+let change = data.quoteResponse.result[0].regularMarketChange;
+
+let className = change >= 0 ? "up" : "down";
+
+html += `<div class="stock ${className}">
+${stock.name} : ${price} (${change.toFixed(2)})
+</div>`;
+
+}
+
+container.innerHTML = html;
+
+}
+
+loadStocks();
+
+</script>
 
 </body>
 </html>
