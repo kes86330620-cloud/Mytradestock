@@ -1,156 +1,148 @@
 <!DOCTYPE html>
-<html lang="ko">
-
+<html>
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>MyTradeStock</title>
+<title>My Stock Dashboard</title>
 
 <style>
-
 body{
-background:#111;
+font-family: Arial;
+background:#0f172a;
 color:white;
-font-family:Arial;
-padding:20px;
-}
-
-h1{
-text-align:center;
-}
-
-.stock{
-margin:12px 0;
-font-size:18px;
-}
-
-.up{
-color:#2ea3ff;
-}
-
-.down{
-color:#ff3b3b;
+margin:20px;
 }
 
 h2{
 margin-top:40px;
 }
 
+.stock{
+padding:10px;
+border-bottom:1px solid #333;
+cursor:pointer;
+}
+
+.price-up{
+color:#22c55e;
+}
+
+.price-down{
+color:#ef4444;
+}
+
+.chart{
+display:none;
+margin-top:10px;
+}
 </style>
 
+<script src="https://s3.tradingview.com/tv.js"></script>
 </head>
 
 <body>
 
-<h1>📈 MyTradeStock</h1>
+<h1>📈 My Stock Dashboard</h1>
 
-<h2>미국 주식</h2>
+<h2>시장 요약</h2>
+<div id="market"></div>
 
-<div id="stocks">주식 불러오는 중...</div>
+<h2>🔥 상승률 TOP</h2>
+<div id="gainers"></div>
 
-<h2>📊 Apple 차트</h2>
+<h2>📉 하락률 TOP</h2>
+<div id="losers"></div>
 
-<div id="tradingview_chart"></div>
+<h2>🇺🇸 미국 주식</h2>
+<div id="us-stocks"></div>
+
+<h2>🇰🇷 한국 주식</h2>
+<div id="kr-stocks"></div>
 
 <script>
 
-const API_KEY = "DSY41UQE7EYGC23C";
-
-const stocks = [
-
-{symbol:"AAPL", name:"Apple"},
-{symbol:"TSLA", name:"Tesla"},
-{symbol:"NVDA", name:"NVIDIA"}
-
+const usStocks = [
+"AAPL","MSFT","NVDA","AMZN","GOOGL",
+"META","TSLA","AMD","NFLX","INTC"
 ];
 
-async function loadStocks(){
+const krStocks = [
+"005930","000660","035420","051910","006400",
+"068270","207940","035720","028260","105560"
+];
 
-let html = "";
+function loadStocks(){
 
-for(let stock of stocks){
+const usDiv = document.getElementById("us-stocks");
+const krDiv = document.getElementById("kr-stocks");
 
-// API 제한 회피 딜레이
-await new Promise(resolve => setTimeout(resolve,1500));
+usDiv.innerHTML="";
+krDiv.innerHTML="";
 
-try{
+usStocks.forEach(symbol=>{
 
-let url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${stock.symbol}&apikey=${API_KEY}`;
+const stock = document.createElement("div");
+stock.className="stock";
 
-let res = await fetch(url);
-
-let data = await res.json();
-
-if(!data["Global Quote"]){
-
-html += `<div class="stock">데이터 오류</div>`;
-
-continue;
-
-}
-
-let price = data["Global Quote"]["05. price"];
-
-let change = data["Global Quote"]["09. change"];
-
-let className = change >= 0 ? "up" : "down";
-
-html += `
-<div class="stock ${className}">
-${stock.name} : ${price} (${change})
-</div>
+stock.innerHTML=`
+${symbol}
+<div class="chart" id="chart-${symbol}"></div>
 `;
 
-}catch(error){
+stock.onclick=()=>toggleChart(symbol,"NASDAQ");
 
-html += `<div class="stock">API 오류</div>`;
+usDiv.appendChild(stock);
+
+});
+
+krStocks.forEach(symbol=>{
+
+const stock=document.createElement("div");
+stock.className="stock";
+
+stock.innerHTML=`
+${symbol}
+<div class="chart" id="chart-${symbol}"></div>
+`;
+
+stock.onclick=()=>toggleChart(symbol,"KRX");
+
+krDiv.appendChild(stock);
+
+});
 
 }
 
+function toggleChart(symbol,exchange){
+
+const chart=document.getElementById("chart-"+symbol);
+
+if(chart.style.display==="block"){
+chart.style.display="none";
+chart.innerHTML="";
+return;
 }
 
-document.getElementById("stocks").innerHTML = html;
+chart.style.display="block";
+
+new TradingView.widget({
+container_id:"chart-"+symbol,
+width:"100%",
+height:300,
+symbol:exchange+":"+symbol,
+interval:"D",
+theme:"dark",
+style:"1",
+locale:"kr"
+});
 
 }
 
 loadStocks();
 
-</script>
-
-<script src="https://s3.tradingview.com/tv.js"></script>
-
-<script>
-
-new TradingView.widget({
-
-"width": "100%",
-
-"height": 500,
-
-"symbol": "NASDAQ:AAPL",
-
-"interval": "D",
-
-"timezone": "Etc/UTC",
-
-"theme": "dark",
-
-"style": "1",
-
-"locale": "kr",
-
-"toolbar_bg": "#111",
-
-"enable_publishing": false,
-
-"container_id": "tradingview_chart"
-
-});
+/* 30초 자동 새로고침 */
+setInterval(loadStocks,30000);
 
 </script>
 
 </body>
-
 </html>
