@@ -6,7 +6,6 @@
 <title>MyTradeStock V1</title>
 
 <style>
-
 body{
 background:#111;
 color:white;
@@ -30,7 +29,6 @@ color:#2ea3ff;
 .down{
 color:#ff3b3b;
 }
-
 </style>
 
 </head>
@@ -39,48 +37,33 @@ color:#ff3b3b;
 
 <h1>📈 MyTradeStock V1</h1>
 
-<h2>실시간 주식</h2>
+<h2>주식 정보</h2>
 
-<div id="stocks"></div>
+<div id="stocks">데이터 불러오는 중...</div>
 
 <script>
 
 const stocks = [
-{symbol:"005930.KS", name:"삼성전자"},
-{symbol:"000660.KS", name:"SK하이닉스"},
-{symbol:"035420.KS", name:"NAVER"}
+{name:"삼성전자", price:72000, change:1200},
+{name:"SK하이닉스", price:145000, change:-800},
+{name:"NAVER", price:210000, change:500}
 ];
-
-async function loadStocks(){
-
-let container = document.getElementById("stocks");
-container.innerHTML = "불러오는 중...";
 
 let html = "";
 
 for(let stock of stocks){
 
-let url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${stock.symbol}`;
+let className = stock.change >= 0 ? "up" : "down";
 
-let res = await fetch(url);
-let data = await res.json();
-
-let price = data.quoteResponse.result[0].regularMarketPrice;
-let change = data.quoteResponse.result[0].regularMarketChange;
-
-let className = change >= 0 ? "up" : "down";
-
-html += `<div class="stock ${className}">
-${stock.name} : ${price} (${change.toFixed(2)})
-</div>`;
+html += `
+<div class="stock ${className}">
+${stock.name} : ${stock.price.toLocaleString()} (${stock.change})
+</div>
+`;
 
 }
 
-container.innerHTML = html;
-
-}
-
-loadStocks();
+document.getElementById("stocks").innerHTML = html;
 
 </script>
 
