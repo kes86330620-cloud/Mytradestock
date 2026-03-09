@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>MyTradeStock</title>
 
 <style>
@@ -46,41 +49,59 @@ color:#ff3b3b;
 const API_KEY = "DSY41UQE7EYGC23C";
 
 const stocks = [
+
 {symbol:"AAPL", name:"Apple"},
 {symbol:"TSLA", name:"Tesla"},
 {symbol:"NVDA", name:"NVIDIA"}
+
 ];
 
 async function loadStocks(){
 
-let html="";
+let html = "";
 
 for(let stock of stocks){
 
-let url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${stock.symbol}&apikey=${API_KEY}`;
+// API 제한 피하기 위해 딜레이
+await new Promise(resolve => setTimeout(resolve,1500));
+
+try{
+
+let url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${stock.symbol}&apikey=${API_KEY}`;
 
 let res = await fetch(url);
+
 let data = await res.json();
 
 if(!data["Global Quote"]){
+
 html += `<div class="stock">데이터 오류</div>`;
+
 continue;
+
 }
 
 let price = data["Global Quote"]["05. price"];
+
 let change = data["Global Quote"]["09. change"];
 
 let className = change >= 0 ? "up" : "down";
 
-html+=`
+html += `
 <div class="stock ${className}">
 ${stock.name} : ${price} (${change})
 </div>
 `;
 
+}catch(error){
+
+html += `<div class="stock">API 오류</div>`;
+
 }
 
-document.getElementById("stocks").innerHTML=html;
+}
+
+document.getElementById("stocks").innerHTML = html;
 
 }
 
@@ -89,4 +110,5 @@ loadStocks();
 </script>
 
 </body>
+
 </html>
