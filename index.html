@@ -62,6 +62,11 @@ let url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${stock.
 let res = await fetch(url);
 let data = await res.json();
 
+if(!data["Global Quote"]){
+html += `<div class="stock">데이터 오류</div>`;
+continue;
+}
+
 let price = data["Global Quote"]["05. price"];
 let change = data["Global Quote"]["09. change"];
 
