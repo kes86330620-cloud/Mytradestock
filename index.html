@@ -3,17 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <title>Stock Dashboard</title>
+
 <style>
+
 body{
-font-family:Arial;
 background:#0f172a;
 color:white;
+font-family:Arial;
 margin:0;
 padding:20px;
 }
 
 h1{
 margin-bottom:30px;
+}
+
+h2{
+margin-top:40px;
 }
 
 .stock{
@@ -26,24 +32,28 @@ cursor:pointer;
 
 .price{
 float:right;
+font-weight:bold;
 }
 
 .chart{
 display:none;
 margin-top:10px;
 }
+
 </style>
 </head>
 
+
 <body>
 
-<h1>📈 Stock Dashboard</h1>
+<h1>📈 My Stock Dashboard</h1>
 
 <h2>🇺🇸 US Stocks</h2>
 <div id="us"></div>
 
 <h2>🇰🇷 Korea Stocks</h2>
 <div id="kr"></div>
+
 
 <script>
 
@@ -60,40 +70,55 @@ const usStocks=[
 {name:"Intel",symbol:"NASDAQ:INTC"}
 ];
 
+
 const krStocks=[
-{name:"삼성전자",symbol:"KOSPI:005930"},
-{name:"SK하이닉스",symbol:"KOSPI:000660"},
-{name:"NAVER",symbol:"KOSPI:035420"},
-{name:"LG화학",symbol:"KOSPI:051910"},
-{name:"삼성SDI",symbol:"KOSPI:006400"},
-{name:"셀트리온",symbol:"KOSPI:068270"},
-{name:"삼성바이오로직스",symbol:"KOSPI:207940"},
-{name:"카카오",symbol:"KOSPI:035720"},
-{name:"삼성물산",symbol:"KOSPI:028260"},
-{name:"KB금융",symbol:"KOSPI:105560"}
+{name:"삼성전자",symbol:"KRX:005930"},
+{name:"SK하이닉스",symbol:"KRX:000660"},
+{name:"NAVER",symbol:"KRX:035420"},
+{name:"LG화학",symbol:"KRX:051910"},
+{name:"삼성SDI",symbol:"KRX:006400"},
+{name:"셀트리온",symbol:"KRX:068270"},
+{name:"삼성바이오로직스",symbol:"KRX:207940"},
+{name:"카카오",symbol:"KRX:035720"},
+{name:"삼성물산",symbol:"KRX:028260"},
+{name:"KB금융",symbol:"KRX:105560"}
 ];
 
-function createStocks(list,element){
+
+function createStockList(list,container){
 
 list.forEach(stock=>{
 
 const div=document.createElement("div");
+
 div.className="stock";
 
 div.innerHTML=`
-${stock.name}
+
+<span>${stock.name}</span>
+
+<span class="price">
+<iframe 
+src="https://s.tradingview.com/widgetembed/?symbol=${stock.symbol}&interval=1&hide_top_toolbar=true&hide_legend=true&theme=dark&style=2"
+width="120"
+height="30"
+frameborder="0">
+</iframe>
+</span>
+
 <div class="chart" id="${stock.symbol}"></div>
+
 `;
 
-div.onclick=()=>{
-toggleChart(stock.symbol);
-};
+div.onclick=()=>toggleChart(stock.symbol);
 
-document.getElementById(element).appendChild(div);
+document.getElementById(container).appendChild(div);
 
 });
 
 }
+
+
 
 function toggleChart(symbol){
 
@@ -108,18 +133,22 @@ return;
 chart.style.display="block";
 
 chart.innerHTML=`
+
 <iframe
 width="100%"
-height="400"
+height="420"
 src="https://s.tradingview.com/widgetembed/?symbol=${symbol}&interval=D&theme=dark"
 frameborder="0">
 </iframe>
+
 `;
 
 }
 
-createStocks(usStocks,"us");
-createStocks(krStocks,"kr");
+
+
+createStockList(usStocks,"us");
+createStockList(krStocks,"kr");
 
 </script>
 
