@@ -2,77 +2,62 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>My Stock Dashboard</title>
-
-<script src="https://s3.tradingview.com/tv.js"></script>
-
+<title>Stock Dashboard</title>
 <style>
 body{
 font-family:Arial;
-background:#111;
+background:#0f172a;
 color:white;
-margin:20px;
+margin:0;
+padding:20px;
 }
 
 h1{
-text-align:center;
+margin-bottom:30px;
 }
 
 .stock{
-border:1px solid #333;
-padding:10px;
-margin-bottom:20px;
-border-radius:10px;
-background:#1b1b1b;
-}
-
-.stock button{
-margin-top:8px;
-padding:6px 10px;
+background:#1e293b;
+padding:12px;
+margin-bottom:10px;
+border-radius:8px;
 cursor:pointer;
 }
 
+.price{
+float:right;
+}
+
 .chart{
+display:none;
 margin-top:10px;
 }
-
-.price{
-font-size:18px;
-margin-top:5px;
-}
-
-.up{color:#00ff88;}
-.down{color:#ff4d4d;}
 </style>
 </head>
 
 <body>
 
-<h1>📊 My Stock Dashboard</h1>
+<h1>📈 Stock Dashboard</h1>
 
-<h2>🇺🇸 미국 주식</h2>
-<div id="usStocks"></div>
+<h2>🇺🇸 US Stocks</h2>
+<div id="us"></div>
 
-<h2>🇰🇷 한국 주식</h2>
-<div id="krStocks"></div>
+<h2>🇰🇷 Korea Stocks</h2>
+<div id="kr"></div>
 
 <script>
 
-const API_KEY="DSY41UQE7EYGC23C";
-
-/* ---------------- 종목 리스트 ---------------- */
-
 const usStocks=[
-{name:"Apple",symbol:"AAPL"},
-{name:"Microsoft",symbol:"MSFT"},
-{name:"NVIDIA",symbol:"NVDA"},
-{name:"Amazon",symbol:"AMZN"},
-{name:"Tesla",symbol:"TSLA"},
-{name:"Google",symbol:"GOOGL"},
-{name:"Meta",symbol:"META"},
-{name:"Netflix",symbol:"NFLX"},
-{name:"AMD",symbol:"AMD"},
-{name:"Intel",symbol:"INTC"}
+{name:"Apple",symbol:"NASDAQ:AAPL"},
+{name:"Microsoft",symbol:"NASDAQ:MSFT"},
+{name:"Nvidia",symbol:"NASDAQ:NVDA"},
+{name:"Tesla",symbol:"NASDAQ:TSLA"},
+{name:"Amazon",symbol:"NASDAQ:AMZN"},
+{name:"Google",symbol:"NASDAQ:GOOGL"},
+{name:"Meta",symbol:"NASDAQ:META"},
+{name:"AMD",symbol:"NASDAQ:AMD"},
+{name:"Netflix",symbol:"NASDAQ:NFLX"},
+{name:"Intel",symbol:"NASDAQ:INTC"}
 ];
 
 const krStocks=[
@@ -88,138 +73,53 @@ const krStocks=[
 {name:"KB금융",symbol:"KOSPI:105560"}
 ];
 
-/* ---------------- 가격 불러오기 ---------------- */
+function createStocks(list,element){
 
-async function getPrice(symbol){
+list.forEach(stock=>{
 
-let url=`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`;
-
-try{
-
-let res=await fetch(url);
-let data=await res.json();
-
-return data;
-
-}catch{
-
-return null;
-
-}
-
-}
-
-/* ---------------- 주식 UI 생성 ---------------- */
-
-async function createStock(stock,container,isUS){
-
-let div=document.createElement("div");
+const div=document.createElement("div");
 div.className="stock";
 
-let priceData=await getPrice(stock.symbol.replace("KOSPI:",""));
-
-let price="데이터 오류";
-let changeClass="";
-
-if(priceData && priceData.c){
-
-price=priceData.c;
-
-if(priceData.d>0)changeClass="up";
-else if(priceData.d<0)changeClass="down";
-
-}
-
 div.innerHTML=`
-
-<div>
-<b>${stock.name}</b> (${stock.symbol})
-</div>
-
-<div class="price ${changeClass}">
-가격: ${price}
-</div>
-
-<button onclick="toggleChart('${stock.symbol}','chart_${stock.symbol.replace(':','')}')">
-차트 보기
-</button>
-
-<div class="chart" id="chart_${stock.symbol.replace(':','')}" style="display:none;height:400px;"></div>
-
+${stock.name}
+<div class="chart" id="${stock.symbol}"></div>
 `;
 
-container.appendChild(div);
+div.onclick=()=>{
+toggleChart(stock.symbol);
+};
 
-}
-
-/* ---------------- 차트 생성 ---------------- */
-
-function toggleChart(symbol,id){
-
-let el=document.getElementById(id);
-
-if(el.style.display==="none"){
-
-el.style.display="block";
-
-new TradingView.widget({
-
-container_id:id,
-width:"100%",
-height:400,
-symbol:symbol,
-interval:"D",
-timezone:"Asia/Seoul",
-theme:"dark",
-style:"1",
-locale:"kr",
-studies:[
-"RSI@tv-basicstudies",
-"MACD@tv-basicstudies",
-"MASimple@tv-basicstudies",
-"BB@tv-basicstudies"
-]
+document.getElementById(element).appendChild(div);
 
 });
 
-}else{
+}
 
-el.style.display="none";
+function toggleChart(symbol){
+
+const chart=document.getElementById(symbol);
+
+if(chart.style.display==="block"){
+chart.style.display="none";
+chart.innerHTML="";
+return;
+}
+
+chart.style.display="block";
+
+chart.innerHTML=`
+<iframe
+width="100%"
+height="400"
+src="https://s.tradingview.com/widgetembed/?symbol=${symbol}&interval=D&theme=dark"
+frameborder="0">
+</iframe>
+`;
 
 }
 
-}
-
-/* ---------------- 초기 로드 ---------------- */
-
-async function loadStocks(){
-
-let usContainer=document.getElementById("usStocks");
-let krContainer=document.getElementById("krStocks");
-
-for(let s of usStocks){
-
-await createStock(s,usContainer,true);
-
-}
-
-for(let s of krStocks){
-
-await createStock(s,krContainer,false);
-
-}
-
-}
-
-loadStocks();
-
-/* ---------------- 자동 새로고침 ---------------- */
-
-setInterval(()=>{
-
-location.reload();
-
-},60000);
+createStocks(usStocks,"us");
+createStocks(krStocks,"kr");
 
 </script>
 
