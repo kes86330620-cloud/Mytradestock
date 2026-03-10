@@ -2,7 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Stock Dashboard</title>
+<title>MyTradeStock</title>
+
+<script src="https://s3.tradingview.com/tv.js"></script>
 
 <style>
 
@@ -14,11 +16,17 @@ margin:0;
 padding:20px;
 }
 
-h1{
-margin-bottom:30px;
+h1{margin-bottom:20px;}
+
+input{
+width:100%;
+padding:10px;
+margin-bottom:20px;
+border-radius:6px;
+border:none;
 }
 
-h2{
+.section{
 margin-top:40px;
 }
 
@@ -40,115 +48,232 @@ display:none;
 margin-top:10px;
 }
 
+.up{color:#00ff88;}
+.down{color:#ff4d4d;}
+
+.recommend{
+background:#1a2238;
+padding:15px;
+border-radius:10px;
+margin-bottom:15px;
+}
+
 </style>
 </head>
 
-
 <body>
 
-<h1>📈 My Stock Dashboard</h1>
+<h1>📈 MyTradeStock Dashboard</h1>
 
-<h2>🇺🇸 US Stocks</h2>
+<input id="search" placeholder="종목 검색..." onkeyup="searchStock()">
+
+<div class="section">
+
+<h2>🔥 오늘 상승 가능성 높은 종목</h2>
+<div id="recommend"></div>
+
+</div>
+
+<div class="section">
+
+<h2>🇺🇸 미국 주식</h2>
 <div id="us"></div>
 
-<h2>🇰🇷 Korea Stocks</h2>
+</div>
+
+<div class="section">
+
+<h2>🇰🇷 한국 주식</h2>
 <div id="kr"></div>
 
+</div>
 
 <script>
 
-const usStocks=[
-{name:"Apple",symbol:"NASDAQ:AAPL"},
-{name:"Microsoft",symbol:"NASDAQ:MSFT"},
-{name:"Nvidia",symbol:"NASDAQ:NVDA"},
-{name:"Tesla",symbol:"NASDAQ:TSLA"},
-{name:"Amazon",symbol:"NASDAQ:AMZN"},
-{name:"Google",symbol:"NASDAQ:GOOGL"},
-{name:"Meta",symbol:"NASDAQ:META"},
-{name:"AMD",symbol:"NASDAQ:AMD"},
-{name:"Netflix",symbol:"NASDAQ:NFLX"},
-{name:"Intel",symbol:"NASDAQ:INTC"}
-];
+const API="DSY41UQE7EYGC23C";
 
+const usStocks=[
+{name:"Apple",symbol:"AAPL",tv:"NASDAQ:AAPL"},
+{name:"Microsoft",symbol:"MSFT",tv:"NASDAQ:MSFT"},
+{name:"NVIDIA",symbol:"NVDA",tv:"NASDAQ:NVDA"},
+{name:"Tesla",symbol:"TSLA",tv:"NASDAQ:TSLA"},
+{name:"Amazon",symbol:"AMZN",tv:"NASDAQ:AMZN"},
+{name:"Google",symbol:"GOOGL",tv:"NASDAQ:GOOGL"},
+{name:"Meta",symbol:"META",tv:"NASDAQ:META"},
+{name:"AMD",symbol:"AMD",tv:"NASDAQ:AMD"},
+{name:"Netflix",symbol:"NFLX",tv:"NASDAQ:NFLX"},
+{name:"Intel",symbol:"INTC",tv:"NASDAQ:INTC"}
+];
 
 const krStocks=[
-{name:"삼성전자",symbol:"KRX:005930"},
-{name:"SK하이닉스",symbol:"KRX:000660"},
-{name:"NAVER",symbol:"KRX:035420"},
-{name:"LG화학",symbol:"KRX:051910"},
-{name:"삼성SDI",symbol:"KRX:006400"},
-{name:"셀트리온",symbol:"KRX:068270"},
-{name:"삼성바이오로직스",symbol:"KRX:207940"},
-{name:"카카오",symbol:"KRX:035720"},
-{name:"삼성물산",symbol:"KRX:028260"},
-{name:"KB금융",symbol:"KRX:105560"}
+{name:"삼성전자",symbol:"005930.KS",tv:"KRX:005930"},
+{name:"SK하이닉스",symbol:"000660.KS",tv:"KRX:000660"},
+{name:"NAVER",symbol:"035420.KS",tv:"KRX:035420"},
+{name:"LG화학",symbol:"051910.KS",tv:"KRX:051910"},
+{name:"삼성SDI",symbol:"006400.KS",tv:"KRX:006400"},
+{name:"셀트리온",symbol:"068270.KS",tv:"KRX:068270"},
+{name:"삼성바이오로직스",symbol:"207940.KS",tv:"KRX:207940"},
+{name:"카카오",symbol:"035720.KS",tv:"KRX:035720"},
+{name:"삼성물산",symbol:"028260.KS",tv:"KRX:028260"},
+{name:"KB금융",symbol:"105560.KS",tv:"KRX:105560"}
 ];
 
+async function getPrice(symbol){
 
-function createStockList(list,container){
+let url=`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API}`;
 
-list.forEach(stock=>{
+try{
 
-const div=document.createElement("div");
+let r=await fetch(url);
+let d=await r.json();
+return d;
 
+}catch{
+
+return null;
+
+}
+
+}
+
+async function loadStocks(list,containerId){
+
+let container=document.getElementById(containerId);
+container.innerHTML="";
+
+let dataList=[];
+
+for(let stock of list){
+
+let data=await getPrice(stock.symbol);
+
+let price=0;
+let change=0;
+
+if(data){
+price=data.c;
+change=data.dp;
+}
+
+dataList.push({...stock,price,change});
+
+}
+
+dataList.sort((a,b)=>b.change-a.change);
+
+showRecommend(dataList);
+
+for(let stock of dataList){
+
+let div=document.createElement("div");
 div.className="stock";
+
+let cls=stock.change>=0?"up":"down";
 
 div.innerHTML=`
 
-<span>${stock.name}</span>
+<span>${stock.name} (${stock.symbol})</span>
 
-<span class="price">
-<iframe 
-src="https://s.tradingview.com/widgetembed/?symbol=${stock.symbol}&interval=1&hide_top_toolbar=true&hide_legend=true&theme=dark&style=2"
-width="120"
-height="30"
-frameborder="0">
-</iframe>
+<span class="price ${cls}">
+${stock.price} (${stock.change.toFixed(2)}%)
 </span>
 
 <div class="chart" id="${stock.symbol}"></div>
 
 `;
 
-div.onclick=()=>toggleChart(stock.symbol);
+div.onclick=()=>toggleChart(stock);
 
-document.getElementById(container).appendChild(div);
+container.appendChild(div);
+
+}
+
+}
+
+function showRecommend(data){
+
+let rec=document.getElementById("recommend");
+rec.innerHTML="";
+
+let top=data.slice(0,3);
+
+for(let s of top){
+
+let div=document.createElement("div");
+div.className="recommend";
+
+div.innerHTML=`
+<strong>${s.name}</strong><br>
+현재가 : ${s.price}<br>
+상승률 : ${s.change.toFixed(2)}%
+`;
+
+rec.appendChild(div);
+
+}
+
+}
+
+function toggleChart(stock){
+
+let chart=document.getElementById(stock.symbol);
+
+if(chart.style.display==="block"){
+
+chart.style.display="none";
+chart.innerHTML="";
+return;
+
+}
+
+chart.style.display="block";
+
+new TradingView.widget({
+
+container_id:stock.symbol,
+width:"100%",
+height:420,
+symbol:stock.tv,
+interval:"D",
+timezone:"Asia/Seoul",
+theme:"dark",
+style:"1",
+locale:"kr",
+studies:[
+"RSI@tv-basicstudies",
+"MACD@tv-basicstudies",
+"BB@tv-basicstudies",
+"MASimple@tv-basicstudies"
+]
 
 });
 
 }
 
+function searchStock(){
 
+let input=document.getElementById("search").value.toLowerCase();
+let stocks=document.getElementsByClassName("stock");
 
-function toggleChart(symbol){
+for(let s of stocks){
 
-const chart=document.getElementById(symbol);
-
-if(chart.style.display==="block"){
-chart.style.display="none";
-chart.innerHTML="";
-return;
-}
-
-chart.style.display="block";
-
-chart.innerHTML=`
-
-<iframe
-width="100%"
-height="420"
-src="https://s.tradingview.com/widgetembed/?symbol=${symbol}&interval=D&theme=dark"
-frameborder="0">
-</iframe>
-
-`;
+let text=s.innerText.toLowerCase();
+s.style.display=text.includes(input)?"block":"none";
 
 }
 
+}
 
+async function load(){
 
-createStockList(usStocks,"us");
-createStockList(krStocks,"kr");
+await loadStocks(usStocks,"us");
+await loadStocks(krStocks,"kr");
+
+}
+
+load();
+
+setInterval(load,60000);
 
 </script>
 
