@@ -2,9 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>MyTradeStock</title>
-
-<script src="https://s3.tradingview.com/tv.js"></script>
+<title>MystockAI</title>
 
 <style>
 
@@ -12,45 +10,33 @@ body{
 background:#0f172a;
 color:white;
 font-family:Arial;
-padding:20px;
+padding:30px;
 }
 
-h1{margin-bottom:20px;}
+h1{
+font-size:36px;
+}
 
-input{
-width:100%;
-padding:10px;
-margin-bottom:20px;
-border-radius:6px;
+button{
+padding:12px 20px;
+background:#3b82f6;
 border:none;
+color:white;
+border-radius:6px;
+cursor:pointer;
+margin-top:20px;
 }
 
 .stock{
 background:#1e293b;
-padding:12px;
-margin-bottom:10px;
-border-radius:8px;
-cursor:pointer;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
 }
 
-.price{
-float:right;
-font-weight:bold;
-}
-
-.chart{
-display:none;
-margin-top:10px;
-}
-
-.up{color:#00ff88;}
-.down{color:#ff4d4d;}
-
-.recommend{
-background:#1a2238;
-padding:12px;
-margin-bottom:10px;
-border-radius:8px;
+.reason{
+color:#94a3b8;
+margin-top:5px;
 }
 
 </style>
@@ -58,197 +44,62 @@ border-radius:8px;
 
 <body>
 
-<h1>📈 MyTradeStock</h1>
+<h1>📈 MystockAI</h1>
 
-<input id="search" placeholder="종목 검색..." onkeyup="searchStock()">
+<h2>오늘 AI 추천 주식</h2>
 
-<h2>🔥 오늘 상승 가능성 높은 종목</h2>
-<div id="recommend"></div>
+<button onclick="generate()">AI 추천 생성</button>
 
-<h2>🇺🇸 미국 주식</h2>
-<div id="us"></div>
-
-<h2>🇰🇷 한국 주식</h2>
-<div id="kr"></div>
+<div id="list"></div>
 
 <script>
 
-const API="DSY41UQE7EYGC23C";
-
-const usStocks=[
-{name:"Apple",symbol:"AAPL",tv:"NASDAQ:AAPL"},
-{name:"Microsoft",symbol:"MSFT",tv:"NASDAQ:MSFT"},
-{name:"NVIDIA",symbol:"NVDA",tv:"NASDAQ:NVDA"},
-{name:"Tesla",symbol:"TSLA",tv:"NASDAQ:TSLA"},
-{name:"Amazon",symbol:"AMZN",tv:"NASDAQ:AMZN"},
-{name:"Google",symbol:"GOOGL",tv:"NASDAQ:GOOGL"},
-{name:"Meta",symbol:"META",tv:"NASDAQ:META"},
-{name:"AMD",symbol:"AMD",tv:"NASDAQ:AMD"},
-{name:"Netflix",symbol:"NFLX",tv:"NASDAQ:NFLX"},
-{name:"Intel",symbol:"INTC",tv:"NASDAQ:INTC"}
+const stocks=[
+{name:"NVIDIA",reason:"AI 반도체 수요 증가"},
+{name:"Microsoft",reason:"클라우드 성장 지속"},
+{name:"Tesla",reason:"전기차 시장 반등 기대"},
+{name:"Amazon",reason:"이커머스 매출 증가"},
+{name:"Meta",reason:"AI 광고 성장"},
+{name:"AMD",reason:"AI 칩 경쟁력 상승"},
+{name:"Apple",reason:"아이폰 판매 안정"},
+{name:"Netflix",reason:"콘텐츠 성장"},
+{name:"Google",reason:"AI 검색 시장 확대"},
+{name:"Palantir",reason:"정부 AI 계약 증가"},
+{name:"Snowflake",reason:"데이터 플랫폼 성장"},
+{name:"CrowdStrike",reason:"사이버보안 수요 증가"},
+{name:"Shopify",reason:"이커머스 플랫폼 성장"},
+{name:"Coinbase",reason:"암호화폐 거래 증가"},
+{name:"Uber",reason:"모빌리티 성장"}
 ];
 
-const krStocks=[
-{name:"삼성전자",symbol:"005930.KS",tv:"KRX:005930"},
-{name:"SK하이닉스",symbol:"000660.KS",tv:"KRX:000660"},
-{name:"NAVER",symbol:"035420.KS",tv:"KRX:035420"},
-{name:"LG화학",symbol:"051910.KS",tv:"KRX:051910"},
-{name:"삼성SDI",symbol:"006400.KS",tv:"KRX:006400"},
-{name:"셀트리온",symbol:"068270.KS",tv:"KRX:068270"},
-{name:"삼성바이오로직스",symbol:"207940.KS",tv:"KRX:207940"},
-{name:"카카오",symbol:"035720.KS",tv:"KRX:035720"},
-{name:"삼성물산",symbol:"028260.KS",tv:"KRX:028260"},
-{name:"KB금융",symbol:"105560.KS",tv:"KRX:105560"}
-];
+function generate(){
 
-async function getPrice(symbol){
+let shuffled=[...stocks].sort(()=>0.5-Math.random());
 
-try{
+let top=shuffled.slice(0,10);
 
-let r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API}`);
-let d=await r.json();
+let box=document.getElementById("list");
 
-return d;
+box.innerHTML="";
 
-}catch{
-
-return null;
-
-}
-
-}
-
-async function loadStocks(list,containerId){
-
-let container=document.getElementById(containerId);
-container.innerHTML="";
-
-let result=[];
-
-for(let s of list){
-
-let data=await getPrice(s.symbol);
-
-let price=0;
-let change=0;
-
-if(data){
-price=data.c;
-change=data.dp;
-}
-
-result.push({...s,price,change});
-
-}
-
-result.sort((a,b)=>b.change-a.change);
-
-createRecommend(result);
-
-for(let s of result){
-
-let cls=s.change>=0?"up":"down";
+top.forEach((s,i)=>{
 
 let div=document.createElement("div");
 
 div.className="stock";
 
 div.innerHTML=`
-<span>${s.name}</span>
-<span class="price ${cls}">
-${s.price} (${s.change.toFixed(2)}%)
-</span>
-<div class="chart" id="${s.symbol}"></div>
-`;
-
-div.onclick=()=>toggleChart(s);
-
-container.appendChild(div);
-
-}
-
-}
-
-function createRecommend(data){
-
-let box=document.getElementById("recommend");
-
-box.innerHTML="";
-
-let top=data.slice(0,3);
-
-for(let s of top){
-
-let div=document.createElement("div");
-
-div.className="recommend";
-
-div.innerHTML=`
-<strong>${s.name}</strong><br>
-가격 ${s.price}<br>
-상승률 ${s.change.toFixed(2)}%
+<b>${i+1}. ${s.name}</b>
+<div class="reason">${s.reason}</div>
 `;
 
 box.appendChild(div);
-
-}
-
-}
-
-function toggleChart(stock){
-
-let chart=document.getElementById(stock.symbol);
-
-if(chart.style.display==="block"){
-
-chart.style.display="none";
-chart.innerHTML="";
-return;
-
-}
-
-chart.style.display="block";
-
-new TradingView.widget({
-
-container_id:stock.symbol,
-width:"100%",
-height:420,
-symbol:stock.tv,
-interval:"D",
-theme:"dark",
-style:"1"
 
 });
 
 }
 
-function searchStock(){
-
-let input=document.getElementById("search").value.toLowerCase();
-
-let stocks=document.getElementsByClassName("stock");
-
-for(let s of stocks){
-
-let text=s.innerText.toLowerCase();
-
-s.style.display=text.includes(input)?"block":"none";
-
-}
-
-}
-
-async function load(){
-
-await loadStocks(usStocks,"us");
-await loadStocks(krStocks,"kr");
-
-}
-
-load();
-
-setInterval(load,60000);
+generate();
 
 </script>
 
