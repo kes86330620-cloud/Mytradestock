@@ -18,7 +18,14 @@ padding:20px;
 
 h1{
 text-align:center;
+margin-bottom:10px;
+}
+
+.update{
+text-align:center;
+color:#94a3b8;
 margin-bottom:30px;
+font-size:13px;
 }
 
 .section{
@@ -55,6 +62,11 @@ color:#fbbf24;
 font-size:13px;
 }
 
+.reason{
+font-size:12px;
+color:#94a3b8;
+}
+
 input{
 width:100%;
 padding:10px;
@@ -71,6 +83,8 @@ margin-bottom:20px;
 <body>
 
 <h1>🤖 MystockAI</h1>
+
+<div id="updateTime" class="update"></div>
 
 
 <div class="section">
@@ -109,8 +123,7 @@ margin-bottom:20px;
 
 const API_KEY = "DSY41UQE7EYGC23C"
 
-
-const symbols = [
+const symbols=[
 
 "AAPL","MSFT","NVDA","AMD","AMZN",
 "GOOGL","META","TSLA","AVGO","NFLX",
@@ -125,7 +138,7 @@ const symbols = [
 
 ]
 
-let stockData = []
+let stockData=[]
 
 
 async function loadStocks(){
@@ -136,21 +149,28 @@ for(const symbol of symbols){
 
 try{
 
-const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`)
+const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`)
 
-const data = await res.json()
+const data=await res.json()
 
-const price = data.c
-const change = data.dp
+const price=data.c
+const change=data.dp
 
-const score = Math.round((change + 5) * 10)
+const score=Math.round((change+5)*10)
+
+let reason="모멘텀 중립"
+
+if(change>2) reason="강한 상승 모멘텀"
+if(change>5) reason="강력한 매수 흐름"
+if(change<-2) reason="하락 압력 존재"
 
 stockData.push({
 
 name:symbol,
 price:price,
 change:change,
-score:score
+score:score,
+reason:reason
 
 })
 
@@ -164,23 +184,24 @@ console.log(e)
 
 render()
 
-}
+updateTime()
 
+}
 
 
 function render(){
 
 stockData.sort((a,b)=>b.change-a.change)
 
-const top10 = stockData.slice(0,10)
+const top10=stockData.slice(0,10)
 
-const topBox = document.getElementById("topStocks")
+const topBox=document.getElementById("topStocks")
 
 topBox.innerHTML=""
 
 top10.forEach(s=>{
 
-let color = s.change>=0 ? "up":"down"
+let color=s.change>=0?"up":"down"
 
 let div=document.createElement("div")
 
@@ -202,6 +223,10 @@ ${s.change.toFixed(2)}%
 AI 점수 : ${s.score}
 </div>
 
+<div class="reason">
+AI 분석 : ${s.reason}
+</div>
+
 `
 
 topBox.appendChild(div)
@@ -209,14 +234,13 @@ topBox.appendChild(div)
 })
 
 
-
-const allBox = document.getElementById("allStocks")
+const allBox=document.getElementById("allStocks")
 
 allBox.innerHTML=""
 
 stockData.forEach(s=>{
 
-let color = s.change>=0 ? "up":"down"
+let color=s.change>=0?"up":"down"
 
 let div=document.createElement("div")
 
@@ -242,29 +266,39 @@ allBox.appendChild(div)
 
 
 
-loadStocks()
+function updateTime(){
 
+const now=new Date()
+
+document.getElementById("updateTime").innerText=
+
+"마지막 업데이트 : "+now.toLocaleTimeString()
+
+}
+
+
+loadStocks()
 
 
 setInterval(loadStocks,60000)
 
 
 
-const search = document.getElementById("search")
+const search=document.getElementById("search")
 
 search.addEventListener("keyup",()=>{
 
-const keyword = search.value.toUpperCase()
+const keyword=search.value.toUpperCase()
 
-const result = stockData.filter(s=>s.name.includes(keyword))
+const result=stockData.filter(s=>s.name.includes(keyword))
 
-const box = document.getElementById("searchResult")
+const box=document.getElementById("searchResult")
 
 box.innerHTML=""
 
 result.forEach(s=>{
 
-let color = s.change>=0 ? "up":"down"
+let color=s.change>=0?"up":"down"
 
 let div=document.createElement("div")
 
@@ -279,6 +313,10 @@ div.innerHTML=`
 <span class="change ${color}">
 ${s.change.toFixed(2)}%
 </span>
+
+<div class="reason">
+AI 분석 : ${s.reason}
+</div>
 
 `
 
