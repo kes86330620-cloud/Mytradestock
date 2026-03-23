@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>MystockAI</title>
 
@@ -23,9 +23,27 @@ margin-bottom:10px;
 
 .update{
 text-align:center;
-color:#94a3b8;
-margin-bottom:30px;
 font-size:13px;
+color:#94a3b8;
+margin-bottom:25px;
+}
+
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.tab{
+padding:10px 20px;
+background:#1e293b;
+cursor:pointer;
+border-radius:6px;
+}
+
+.tab.active{
+background:#38bdf8;
+color:black;
 }
 
 .section{
@@ -45,17 +63,12 @@ font-weight:bold;
 }
 
 .change{
-font-weight:bold;
 margin-left:8px;
+font-weight:bold;
 }
 
-.up{
-color:#22c55e;
-}
-
-.down{
-color:#ef4444;
-}
+.up{color:#22c55e;}
+.down{color:#ef4444;}
 
 .score{
 color:#fbbf24;
@@ -75,37 +88,41 @@ border:none;
 margin-bottom:20px;
 }
 
+.hidden{
+display:none;
+}
+
 </style>
 
 </head>
 
-
 <body>
 
 <h1>🤖 MystockAI</h1>
-
 <div id="updateTime" class="update"></div>
 
+<div class="tabs">
+<div class="tab active" onclick="showTab('us')">미국 주식</div>
+<div class="tab" onclick="showTab('kr')">한국 주식</div>
+</div>
+
+<div id="us">
 
 <div class="section">
-
 <h2>🚀 AI 추천 TOP10</h2>
-
 <div id="topStocks"></div>
-
 </div>
-
-
 
 <div class="section">
-
 <h2>📊 전체 분석 종목</h2>
-
 <div id="allStocks"></div>
+</div>
 
 </div>
 
-
+<div id="kr" class="hidden">
+<h2>한국주식 분석 (준비중)</h2>
+</div>
 
 <div class="section">
 
@@ -117,14 +134,11 @@ margin-bottom:20px;
 
 </div>
 
-
-
 <script>
 
-const API_KEY = "DSY41UQE7EYGC23C"
+const API_KEY="DSY41UQE7EYGC23C"
 
 const symbols=[
-
 "AAPL","MSFT","NVDA","AMD","AMZN",
 "GOOGL","META","TSLA","AVGO","NFLX",
 "INTC","ADBE","CSCO","QCOM","TXN",
@@ -135,17 +149,17 @@ const symbols=[
 "DDOG","NET","OKTA","ZS","CRWD",
 "TEAM","WDAY","ANET","PANW","MDB",
 "FTNT","FSLY","BIDU","PDD","JD"
-
 ]
 
 let stockData=[]
-
 
 async function loadStocks(){
 
 stockData=[]
 
-for(const symbol of symbols){
+for(let i=0;i<symbols.length;i++){
+
+const symbol=symbols[i]
 
 try{
 
@@ -156,38 +170,34 @@ const data=await res.json()
 const price=data.c
 const change=data.dp
 
+if(price==0) continue
+
 const score=Math.round((change+5)*10)
 
-let reason="모멘텀 중립"
+let reason="시장 흐름 관망"
 
-if(change>2) reason="강한 상승 모멘텀"
-if(change>5) reason="강력한 매수 흐름"
-if(change<-2) reason="하락 압력 존재"
+if(change>2) reason="상승 모멘텀 발생"
+if(change>5) reason="강한 매수세 감지"
+if(change<-2) reason="단기 하락 압력"
 
 stockData.push({
-
 name:symbol,
 price:price,
 change:change,
 score:score,
 reason:reason
-
 })
 
 }catch(e){
-
-console.log(e)
-
+console.log(symbol,e)
 }
 
 }
 
 render()
-
 updateTime()
 
 }
-
 
 function render(){
 
@@ -196,66 +206,41 @@ stockData.sort((a,b)=>b.change-a.change)
 const top10=stockData.slice(0,10)
 
 const topBox=document.getElementById("topStocks")
-
 topBox.innerHTML=""
 
 top10.forEach(s=>{
 
-let color=s.change>=0?"up":"down"
+const color=s.change>=0?"up":"down"
 
-let div=document.createElement("div")
-
+const div=document.createElement("div")
 div.className="stock"
 
 div.innerHTML=`
-
-<strong>${s.name}</strong>
-
-<br>
-
+<strong>${s.name}</strong><br>
 <span class="price">$${s.price}</span>
-
-<span class="change ${color}">
-${s.change.toFixed(2)}%
-</span>
-
-<div class="score">
-AI 점수 : ${s.score}
-</div>
-
-<div class="reason">
-AI 분석 : ${s.reason}
-</div>
-
+<span class="change ${color}">${s.change.toFixed(2)}%</span>
+<div class="score">AI 점수 : ${s.score}</div>
+<div class="reason">AI 분석 : ${s.reason}</div>
 `
 
 topBox.appendChild(div)
 
 })
 
-
 const allBox=document.getElementById("allStocks")
-
 allBox.innerHTML=""
 
 stockData.forEach(s=>{
 
-let color=s.change>=0?"up":"down"
+const color=s.change>=0?"up":"down"
 
-let div=document.createElement("div")
-
+const div=document.createElement("div")
 div.className="stock"
 
 div.innerHTML=`
-
 <strong>${s.name}</strong>
-
 <span class="price">$${s.price}</span>
-
-<span class="change ${color}">
-${s.change.toFixed(2)}%
-</span>
-
+<span class="change ${color}">${s.change.toFixed(2)}%</span>
 `
 
 allBox.appendChild(div)
@@ -264,25 +249,27 @@ allBox.appendChild(div)
 
 }
 
-
-
 function updateTime(){
 
 const now=new Date()
 
 document.getElementById("updateTime").innerText=
-
 "마지막 업데이트 : "+now.toLocaleTimeString()
 
 }
 
+function showTab(tab){
+
+document.getElementById("us").classList.add("hidden")
+document.getElementById("kr").classList.add("hidden")
+
+document.getElementById(tab).classList.remove("hidden")
+
+}
 
 loadStocks()
 
-
-setInterval(loadStocks,60000)
-
-
+setInterval(loadStocks,120000)
 
 const search=document.getElementById("search")
 
@@ -298,26 +285,17 @@ box.innerHTML=""
 
 result.forEach(s=>{
 
-let color=s.change>=0?"up":"down"
+const color=s.change>=0?"up":"down"
 
-let div=document.createElement("div")
+const div=document.createElement("div")
 
 div.className="stock"
 
 div.innerHTML=`
-
 <strong>${s.name}</strong>
-
 <span class="price">$${s.price}</span>
-
-<span class="change ${color}">
-${s.change.toFixed(2)}%
-</span>
-
-<div class="reason">
-AI 분석 : ${s.reason}
-</div>
-
+<span class="change ${color}">${s.change.toFixed(2)}%</span>
+<div class="reason">${s.reason}</div>
 `
 
 box.appendChild(div)
