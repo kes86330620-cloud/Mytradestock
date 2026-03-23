@@ -13,57 +13,47 @@ body{
 font-family:Arial;
 background:#0f172a;
 color:white;
-padding:20px;
+padding:30px;
 }
 
 h1{
 text-align:center;
-margin-bottom:5px;
+margin-bottom:10px;
 }
 
-.update{
+.subtitle{
 text-align:center;
-font-size:12px;
 color:#94a3b8;
-margin-bottom:20px;
-}
-
-.market{
-text-align:center;
-margin-bottom:20px;
-font-weight:bold;
+margin-bottom:30px;
 }
 
 .stock{
 background:#1e293b;
-padding:10px;
-margin-bottom:8px;
-border-radius:6px;
+padding:12px;
+margin-bottom:10px;
+border-radius:8px;
 }
 
-.price{color:#38bdf8;font-weight:bold;}
+.name{
+font-size:18px;
+font-weight:bold;
+}
 
-.up{color:#22c55e;}
-.down{color:#ef4444;}
-
-.score{color:#fbbf24;font-size:12px;}
-
-.reason{font-size:12px;color:#94a3b8;}
+.reason{
+font-size:13px;
+color:#94a3b8;
+margin-top:4px;
+}
 
 button{
+margin-top:20px;
+padding:10px;
+width:100%;
 background:#38bdf8;
 border:none;
-padding:5px 8px;
-border-radius:4px;
-cursor:pointer;
-}
-
-input,select{
-width:100%;
-padding:8px;
-margin-bottom:10px;
 border-radius:6px;
-border:none;
+font-weight:bold;
+cursor:pointer;
 }
 
 </style>
@@ -74,135 +64,58 @@ border:none;
 
 <h1>🤖 MystockAI</h1>
 
-<div id="updateTime" class="update"></div>
+<div class="subtitle">
+개인 참고용 주식 추천
+</div>
 
-<div id="marketMood" class="market"></div>
+<div id="recommend"></div>
 
-<h2>AI 추천 TOP10</h2>
-<div id="topStocks"></div>
-
-<h2>하락 TOP10</h2>
-<div id="bottomStocks"></div>
-
-<h2>정렬</h2>
-<select id="sortSelect">
-<option value="change">상승률</option>
-<option value="score">AI 점수</option>
-<option value="price">가격</option>
-</select>
-
-<h2>종목 검색</h2>
-<input id="search" placeholder="예: NVDA">
-<div id="searchResult"></div>
-
-<h2>⭐ 관심종목</h2>
-<div id="favorites"></div>
-
-<h2>전체 종목</h2>
-<div id="allStocks"></div>
+<button onclick="generate()">추천 다시 받기</button>
 
 <script>
 
-const API_KEY="DSY41UQE7EYGC23C"
+const stocks=[
 
-const symbols=[
-"AAPL","MSFT","NVDA","AMD","AMZN",
-"GOOGL","META","TSLA","AVGO","NFLX",
-"INTC","ADBE","CSCO","QCOM","TXN",
-"PYPL","AMAT","MU","LRCX","KLAC",
-"ORCL","CRM","IBM","NOW","SHOP",
-"SQ","UBER","LYFT","SNOW","PLTR",
-"COIN","ZM","DOCU","ROKU","SPOT",
-"DDOG","NET","OKTA","ZS","CRWD",
-"TEAM","WDAY","ANET","PANW","MDB",
-"FTNT","BIDU","PDD","JD"
+{symbol:"NVDA",reason:"AI 반도체 성장"},
+{symbol:"MSFT",reason:"클라우드 성장"},
+{symbol:"AAPL",reason:"안정적 실적"},
+{symbol:"AMZN",reason:"이커머스 + 클라우드"},
+{symbol:"GOOGL",reason:"광고 시장 회복"},
+{symbol:"META",reason:"AI 광고 성장"},
+{symbol:"TSLA",reason:"전기차 시장 확대"},
+{symbol:"AMD",reason:"데이터센터 수요"},
+{symbol:"AVGO",reason:"반도체 인프라"},
+{symbol:"NFLX",reason:"콘텐츠 성장"},
+{symbol:"PLTR",reason:"AI 데이터 분석"},
+{symbol:"SHOP",reason:"전자상거래 플랫폼"},
+{symbol:"CRM",reason:"기업 소프트웨어"},
+{symbol:"SNOW",reason:"데이터 클라우드"},
+{symbol:"UBER",reason:"모빌리티 플랫폼"}
+
 ]
 
-let stockData=[]
-let favorites=JSON.parse(localStorage.getItem("fav"))||[]
+function generate(){
 
-async function loadStocks(){
+let shuffled=[...stocks].sort(()=>0.5-Math.random())
 
-stockData=[]
+let pick=shuffled.slice(0,10)
 
-for(const symbol of symbols){
-
-try{
-
-const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`)
-
-const data=await res.json()
-
-if(!data.c) continue
-
-const price=data.c
-const change=data.dp
-
-const score=Math.max(0,Math.round((change+5)*10))
-
-let reason="시장 관망"
-
-if(change>2) reason="상승 모멘텀"
-if(change>5) reason="강한 매수세"
-if(change<-2) reason="하락 압력"
-
-stockData.push({name:symbol,price,change,score,reason})
-
-}catch(e){}
-
-}
-
-render()
-updateTime()
-marketMood()
-
-}
-
-function render(){
-
-const sortType=document.getElementById("sortSelect").value
-
-stockData.sort((a,b)=>b[sortType]-a[sortType])
-
-const top=stockData.slice(0,10)
-
-const bottom=[...stockData].sort((a,b)=>a.change-b.change).slice(0,10)
-
-draw(top,"topStocks")
-draw(bottom,"bottomStocks")
-draw(stockData,"allStocks")
-
-drawFavorites()
-
-}
-
-function draw(list,id){
-
-const box=document.getElementById(id)
+const box=document.getElementById("recommend")
 
 box.innerHTML=""
 
-list.forEach(s=>{
+pick.forEach(s=>{
 
-const color=s.change>=0?"up":"down"
-const fav=favorites.includes(s.name)
+let div=document.createElement("div")
 
-const div=document.createElement("div")
 div.className="stock"
 
 div.innerHTML=`
 
-<strong>${s.name}</strong>
-<span class="price">$${s.price}</span>
-<span class="${color}">${s.change.toFixed(2)}%</span>
+<div class="name">${s.symbol}</div>
 
-<div class="score">AI 점수 ${s.score}</div>
 <div class="reason">${s.reason}</div>
 
-<button onclick="toggleFav('${s.name}')">
-${fav?"★":"☆"}
-</button>
-
 `
 
 box.appendChild(div)
@@ -211,79 +124,7 @@ box.appendChild(div)
 
 }
 
-function toggleFav(name){
-
-if(favorites.includes(name))
-favorites=favorites.filter(f=>f!==name)
-else
-favorites.push(name)
-
-localStorage.setItem("fav",JSON.stringify(favorites))
-
-render()
-
-}
-
-function drawFavorites(){
-
-const box=document.getElementById("favorites")
-box.innerHTML=""
-
-favorites.forEach(name=>{
-
-const stock=stockData.find(s=>s.name===name)
-
-if(!stock) return
-
-const div=document.createElement("div")
-div.className="stock"
-
-div.innerHTML=`
-<strong>${stock.name}</strong>
-<span>$${stock.price}</span>
-`
-
-box.appendChild(div)
-
-})
-
-}
-
-function updateTime(){
-
-document.getElementById("updateTime").innerText=
-"업데이트 "+new Date().toLocaleTimeString()
-
-}
-
-function marketMood(){
-
-let avg=stockData.reduce((a,b)=>a+b.change,0)/stockData.length
-
-let mood="시장 중립"
-
-if(avg>1) mood="📈 시장 강세"
-if(avg<-1) mood="📉 시장 약세"
-
-document.getElementById("marketMood").innerText=mood
-
-}
-
-document.getElementById("sortSelect").addEventListener("change",render)
-
-document.getElementById("search").addEventListener("keyup",e=>{
-
-const keyword=e.target.value.toUpperCase()
-
-const result=stockData.filter(s=>s.name.includes(keyword))
-
-draw(result,"searchResult")
-
-})
-
-loadStocks()
-
-setInterval(loadStocks,120000)
+generate()
 
 </script>
 
