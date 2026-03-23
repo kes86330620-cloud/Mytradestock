@@ -1,129 +1,79 @@
+124"}
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<title>MystockAI</title>
+<title>MyTradeStock</title>
 
 <style>
-
 body{
 font-family:Arial;
-background:#0f172a;
+background:#111;
 color:white;
-padding:30px;
+padding:20px;
 }
 
-h1{text-align:center;}
+.positive{
+color:#2ea3ff;
+}
+
+.negative{
+color:#ff3b3b;
+}
 
 .stock{
-background:#1e293b;
-padding:12px;
-margin-bottom:10px;
-border-radius:8px;
+margin-top:8px;
 }
-
-.name{font-size:18px;font-weight:bold;}
-.price{color:#38bdf8;}
-.up{color:#22c55e;}
-.down{color:#ef4444;}
-
-button{
-margin-top:20px;
-padding:10px;
-width:100%;
-background:#38bdf8;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
-
 </style>
 
 </head>
 
 <body>
 
-<h1>🤖 MystockAI</h1>
+<h1>📈 MyTradeStock V1</h1>
 
-<div id="stocks">데이터 불러오는 중...</div>
+<h2>실시간 뉴스</h2>
 
-<button onclick="loadStocks()">다시 불러오기</button>
+<div id="news"></div>
+
+<h2>주식 목록</h2>
+
+<div id="stocks"></div>
 
 <script>
 
-const API_KEY="DSY41UQE7EYGC23C"
-
-const symbols=[
-"AAPL","MSFT","NVDA","AMD","AMZN",
-"GOOGL","META","TSLA","AVGO","NFLX"
+const news = [
+{company:"삼성전자",title:"AI 반도체 투자 확대",sentiment:"positive"},
+{company:"카카오",title:"실적 감소 우려",sentiment:"negative"},
+{company:"NAVER",title:"검색 매출 증가",sentiment:"positive"},
+{company:"LG화학",title:"배터리 수주 증가",sentiment:"positive"}
 ]
 
-function sleep(ms){
-return new Promise(resolve=>setTimeout(resolve,ms))
-}
+const stocks = [
+{name:"삼성전자",price:"72000원"},
+{name:"SK하이닉스",price:"145000원"},
+{name:"NAVER",price:"210000원"},
+{name:"카카오",price:"52000원"}
+]
 
-async function loadStocks(){
+const newsBox = document.getElementById("news")
 
-let list=[]
-
-const box=document.getElementById("stocks")
-box.innerHTML="불러오는 중..."
-
-for(const symbol of symbols){
-
-try{
-
-const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`)
-const data=await res.json()
-
-if(data.c){
-
-list.push({
-symbol:symbol,
-price:data.c,
-change:data.dp
+news.forEach(n=>{
+const div=document.createElement("div")
+div.className=n.sentiment
+div.innerText=n.company+" : "+n.title
+newsBox.appendChild(div)
 })
 
-}
+const stockBox=document.getElementById("stocks")
 
-}catch(e){}
-
-await sleep(500) // 🔥 핵심 (속도 제한)
-
-}
-
-list.sort((a,b)=>b.change-a.change)
-
-const top=list.slice(0,10)
-
-box.innerHTML=""
-
-top.forEach(s=>{
-
-let color=s.change>=0?"up":"down"
-
-let div=document.createElement("div")
-
+stocks.forEach(s=>{
+const div=document.createElement("div")
 div.className="stock"
-
-div.innerHTML=`
-<div class="name">${s.symbol}</div>
-<div class="price">$${s.price}</div>
-<div class="${color}">${s.change.toFixed(2)}%</div>
-`
-
-box.appendChild(div)
-
+div.innerText=s.name+" "+s.price
+stockBox.appendChild(div)
 })
-
-}
-
-loadStocks()
 
 </script>
 
 </body>
-</html>
+</
