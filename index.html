@@ -18,13 +18,12 @@ padding:30px;
 
 h1{
 text-align:center;
-margin-bottom:10px;
 }
 
 .subtitle{
 text-align:center;
 color:#94a3b8;
-margin-bottom:30px;
+margin-bottom:20px;
 }
 
 .stock{
@@ -39,10 +38,16 @@ font-size:18px;
 font-weight:bold;
 }
 
-.reason{
-font-size:13px;
-color:#94a3b8;
-margin-top:4px;
+.price{
+color:#38bdf8;
+}
+
+.up{
+color:#22c55e;
+}
+
+.down{
+color:#ef4444;
 }
 
 button{
@@ -65,46 +70,59 @@ cursor:pointer;
 <h1>🤖 MystockAI</h1>
 
 <div class="subtitle">
-개인 참고용 주식 추천
+실제 시장 데이터 기반 참고 추천
 </div>
 
-<div id="recommend"></div>
+<div id="stocks">데이터 불러오는 중...</div>
 
-<button onclick="generate()">추천 다시 받기</button>
+<button onclick="loadStocks()">새로 불러오기</button>
 
 <script>
 
-const stocks=[
+const API_KEY="DSY41UQE7EYGC23C"
 
-{symbol:"NVDA",reason:"AI 반도체 성장"},
-{symbol:"MSFT",reason:"클라우드 성장"},
-{symbol:"AAPL",reason:"안정적 실적"},
-{symbol:"AMZN",reason:"이커머스 + 클라우드"},
-{symbol:"GOOGL",reason:"광고 시장 회복"},
-{symbol:"META",reason:"AI 광고 성장"},
-{symbol:"TSLA",reason:"전기차 시장 확대"},
-{symbol:"AMD",reason:"데이터센터 수요"},
-{symbol:"AVGO",reason:"반도체 인프라"},
-{symbol:"NFLX",reason:"콘텐츠 성장"},
-{symbol:"PLTR",reason:"AI 데이터 분석"},
-{symbol:"SHOP",reason:"전자상거래 플랫폼"},
-{symbol:"CRM",reason:"기업 소프트웨어"},
-{symbol:"SNOW",reason:"데이터 클라우드"},
-{symbol:"UBER",reason:"모빌리티 플랫폼"}
-
+const symbols=[
+"AAPL","MSFT","NVDA","AMD","AMZN",
+"GOOGL","META","TSLA","AVGO","NFLX",
+"INTC","ADBE","CSCO","QCOM","PYPL",
+"AMAT","MU","LRCX","ORCL","CRM"
 ]
 
-function generate(){
+async function loadStocks(){
 
-let shuffled=[...stocks].sort(()=>0.5-Math.random())
+let list=[]
 
-let pick=shuffled.slice(0,10)
+for(const symbol of symbols){
 
-const box=document.getElementById("recommend")
+try{
+
+const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`)
+
+const data=await res.json()
+
+if(!data.c) continue
+
+list.push({
+symbol:symbol,
+price:data.c,
+change:data.dp
+})
+
+}catch(e){}
+
+}
+
+list.sort((a,b)=>b.change-a.change)
+
+const top=list.slice(0,10)
+
+const box=document.getElementById("stocks")
 
 box.innerHTML=""
 
-pick.forEach(s=>{
+top.forEach(s=>{
+
+let color=s.change>=0?"up":"down"
 
 let div=document.createElement("div")
 
@@ -114,7 +132,11 @@ div.innerHTML=`
 
 <div class="name">${s.symbol}</div>
 
-<div class="reason">${s.reason}</div>
+<div class="price">$${s.price}</div>
+
+<div class="${color}">
+${s.change.toFixed(2)}%
+</div>
 
 `
 
@@ -124,7 +146,7 @@ box.appendChild(div)
 
 }
 
-generate()
+loadStocks()
 
 </script>
 
