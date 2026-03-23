@@ -1,42 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>MystockAI</title>
 
 <style>
 
 body{
+font-family:Arial;
 background:#0f172a;
 color:white;
-font-family:Arial;
-padding:30px;
+padding:20px;
 }
 
 h1{
-font-size:36px;
+text-align:center;
+margin-bottom:30px;
 }
 
-button{
-padding:12px 20px;
-background:#3b82f6;
-border:none;
-color:white;
-border-radius:6px;
-cursor:pointer;
-margin-top:20px;
+.section{
+margin-bottom:40px;
 }
 
 .stock{
+padding:10px;
+margin-bottom:10px;
 background:#1e293b;
-padding:15px;
-margin-top:15px;
-border-radius:10px;
+border-radius:8px;
+}
+
+.price{
+color:#38bdf8;
+font-weight:bold;
 }
 
 .reason{
 color:#94a3b8;
+font-size:14px;
 margin-top:5px;
+}
+
+input{
+width:100%;
+padding:10px;
+border-radius:8px;
+border:none;
+margin-bottom:20px;
 }
 
 </style>
@@ -44,62 +54,105 @@ margin-top:5px;
 
 <body>
 
-<h1>📈 MystockAI</h1>
+<h1>🤖 MystockAI</h1>
 
-<h2>오늘 AI 추천 주식</h2>
+<div class="section">
 
-<button onclick="generate()">AI 추천 생성</button>
+<h2>🔎 주식 검색</h2>
 
-<div id="list"></div>
+<input id="search" placeholder="종목 검색 (예: AAPL)">
+
+<div id="searchResult"></div>
+
+</div>
+
+
+<div class="section">
+
+<h2>🚀 오늘 AI 추천 TOP10</h2>
+
+<div id="aiStocks"></div>
+
+</div>
 
 <script>
 
-const stocks=[
-{name:"NVIDIA",reason:"AI 반도체 수요 증가"},
-{name:"Microsoft",reason:"클라우드 성장 지속"},
-{name:"Tesla",reason:"전기차 시장 반등 기대"},
-{name:"Amazon",reason:"이커머스 매출 증가"},
-{name:"Meta",reason:"AI 광고 성장"},
-{name:"AMD",reason:"AI 칩 경쟁력 상승"},
-{name:"Apple",reason:"아이폰 판매 안정"},
-{name:"Netflix",reason:"콘텐츠 성장"},
-{name:"Google",reason:"AI 검색 시장 확대"},
-{name:"Palantir",reason:"정부 AI 계약 증가"},
-{name:"Snowflake",reason:"데이터 플랫폼 성장"},
-{name:"CrowdStrike",reason:"사이버보안 수요 증가"},
-{name:"Shopify",reason:"이커머스 플랫폼 성장"},
-{name:"Coinbase",reason:"암호화폐 거래 증가"},
-{name:"Uber",reason:"모빌리티 성장"}
-];
+const stocks = [
 
-function generate(){
+{name:"AAPL",price:182,reason:"아이폰 매출 성장 기대"},
+{name:"NVDA",price:905,reason:"AI 데이터센터 GPU 수요 급증"},
+{name:"MSFT",price:420,reason:"클라우드 AI 성장"},
+{name:"AMD",price:170,reason:"AI 서버 CPU 시장 확대"},
+{name:"AMZN",price:178,reason:"AWS 성장"},
+{name:"META",price:495,reason:"AI 광고 시스템 확대"},
+{name:"TSLA",price:210,reason:"로보택시 기대"},
+{name:"AVGO",price:1320,reason:"AI 반도체 수요"},
+{name:"NFLX",price:610,reason:"구독자 증가"},
+{name:"GOOGL",price:152,reason:"AI 검색 수익 확대"}
 
-let shuffled=[...stocks].sort(()=>0.5-Math.random());
+]
 
-let top=shuffled.slice(0,10);
+const box = document.getElementById("aiStocks")
 
-let box=document.getElementById("list");
+stocks.forEach(s=>{
 
-box.innerHTML="";
+let div = document.createElement("div")
 
-top.forEach((s,i)=>{
-
-let div=document.createElement("div");
-
-div.className="stock";
+div.className="stock"
 
 div.innerHTML=`
-<b>${i+1}. ${s.name}</b>
-<div class="reason">${s.reason}</div>
-`;
 
-box.appendChild(div);
+<strong>${s.name}</strong>
+<br>
+<span class="price">$${s.price}</span>
 
-});
+<div class="reason">
+AI 분석: ${s.reason}
+</div>
 
-}
+`
 
-generate();
+box.appendChild(div)
+
+})
+
+
+
+const search = document.getElementById("search")
+
+search.addEventListener("keyup",()=>{
+
+let keyword = search.value.toUpperCase()
+
+let result = stocks.filter(s=>s.name.includes(keyword))
+
+const box = document.getElementById("searchResult")
+
+box.innerHTML=""
+
+result.forEach(s=>{
+
+let div=document.createElement("div")
+
+div.className="stock"
+
+div.innerHTML=`
+
+<strong>${s.name}</strong>
+<br>
+<span class="price">$${s.price}</span>
+
+<div class="reason">
+AI 분석: ${s.reason}
+</div>
+
+`
+
+box.appendChild(div)
+
+})
+
+})
 
 </script>
 
