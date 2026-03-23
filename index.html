@@ -16,15 +16,7 @@ color:white;
 padding:30px;
 }
 
-h1{
-text-align:center;
-}
-
-.subtitle{
-text-align:center;
-color:#94a3b8;
-margin-bottom:20px;
-}
+h1{text-align:center;}
 
 .stock{
 background:#1e293b;
@@ -33,22 +25,10 @@ margin-bottom:10px;
 border-radius:8px;
 }
 
-.name{
-font-size:18px;
-font-weight:bold;
-}
-
-.price{
-color:#38bdf8;
-}
-
-.up{
-color:#22c55e;
-}
-
-.down{
-color:#ef4444;
-}
+.name{font-size:18px;font-weight:bold;}
+.price{color:#38bdf8;}
+.up{color:#22c55e;}
+.down{color:#ef4444;}
 
 button{
 margin-top:20px;
@@ -57,7 +37,6 @@ width:100%;
 background:#38bdf8;
 border:none;
 border-radius:6px;
-font-weight:bold;
 cursor:pointer;
 }
 
@@ -69,13 +48,9 @@ cursor:pointer;
 
 <h1>🤖 MystockAI</h1>
 
-<div class="subtitle">
-실제 시장 데이터 기반 참고 추천
-</div>
-
 <div id="stocks">데이터 불러오는 중...</div>
 
-<button onclick="loadStocks()">새로 불러오기</button>
+<button onclick="loadStocks()">다시 불러오기</button>
 
 <script>
 
@@ -83,24 +58,28 @@ const API_KEY="DSY41UQE7EYGC23C"
 
 const symbols=[
 "AAPL","MSFT","NVDA","AMD","AMZN",
-"GOOGL","META","TSLA","AVGO","NFLX",
-"INTC","ADBE","CSCO","QCOM","PYPL",
-"AMAT","MU","LRCX","ORCL","CRM"
+"GOOGL","META","TSLA","AVGO","NFLX"
 ]
+
+function sleep(ms){
+return new Promise(resolve=>setTimeout(resolve,ms))
+}
 
 async function loadStocks(){
 
 let list=[]
+
+const box=document.getElementById("stocks")
+box.innerHTML="불러오는 중..."
 
 for(const symbol of symbols){
 
 try{
 
 const res=await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`)
-
 const data=await res.json()
 
-if(!data.c) continue
+if(data.c){
 
 list.push({
 symbol:symbol,
@@ -108,15 +87,17 @@ price:data.c,
 change:data.dp
 })
 
+}
+
 }catch(e){}
+
+await sleep(500) // 🔥 핵심 (속도 제한)
 
 }
 
 list.sort((a,b)=>b.change-a.change)
 
 const top=list.slice(0,10)
-
-const box=document.getElementById("stocks")
 
 box.innerHTML=""
 
@@ -129,15 +110,9 @@ let div=document.createElement("div")
 div.className="stock"
 
 div.innerHTML=`
-
 <div class="name">${s.symbol}</div>
-
 <div class="price">$${s.price}</div>
-
-<div class="${color}">
-${s.change.toFixed(2)}%
-</div>
-
+<div class="${color}">${s.change.toFixed(2)}%</div>
 `
 
 box.appendChild(div)
